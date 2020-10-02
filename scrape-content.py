@@ -11,7 +11,8 @@ class Content:
 
 def get_page(url):
     req = requests.get(url)
+    print(req.text)
     return BeautifulSoup(req.text, 'html.parser')
 
 
-print('hello world')
+get_page('https://www.brookings.edu/blog/future-development/2018/01/26/delivering-inclusive-urban-access-3-uncomfortable-truths/')
