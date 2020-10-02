@@ -51,4 +51,4 @@ def followExternalOnly(startingSite):
     followExternalOnly(externalLink)
 
 
-followExternalOnly('https://oreilly.com/')
+# followExternalOnly('https://oreilly.com/')
