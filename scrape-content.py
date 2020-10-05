@@ -7,7 +7,8 @@ class Content:
     """
     Common base class for all articles/pages
     """
-    def __init__(self, url, title, body):
+    def __init__(self, topic, url, title, body):
+        self.topic = topic
         self.url = url
         self.title = title
         self.body = body
@@ -16,6 +17,7 @@ class Content:
         """
         Flexible printing function controls output
         """
+        print('New article found for topic: {}'.format(self.topic))
         print("URL: {}".format(self.url))
         print("TITLE: {}".format(self.title))
         print("BODY:\n{}".format(self.body))
@@ -25,9 +27,13 @@ class Website:
     """
     Contains information about website structure
     """
-    def __init__(self, name, url, titleTag, bodyTag):
+    def __init__(self, name, url, searchUrl, resultListing, resultUrl, absoluteUrl, titleTag, bodyTag):
         self.name = name
         self.url = url
+        self.searchUrl = searchUrl
+        self.resultListing = resultListing
+        self.resultUrl = resultUrl
+        self.absoluteUrl = absoluteUrl
         self.titleTag = titleTag
         self.bodyTag = bodyTag
 
