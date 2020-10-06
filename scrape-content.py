@@ -21,6 +21,7 @@ class Content:
         print("URL: {}".format(self.url))
         print("TITLE: {}".format(self.title))
         print("BODY:\n{}".format(self.body))
+        print('-------------------------------------')
 
 
 class Website:
@@ -53,9 +54,9 @@ class Crawler:
         Beautiful Soup object and a selector. Returns an empty 
         string if no object is found for the given selector
         """
-        selected_elems = pageObj.select(selector)
-        if selected_elems is not None and len(selected_elems) > 0:
-            return '\n'.join([elem.get_text() for elem in selected_elems])
+        childObj = pageObj.select(selector)
+        if childObj is not None and len(childObj) > 0:
+            return childObj[0].get_text()
         return ''
 
     def parse(self, site, url):
@@ -66,25 +67,45 @@ class Crawler:
         if bs is not None:
             title = self.safe_get(bs, site.titleTag)
             body = self.safe_get(bs, site.bodyTag)
-            print(title)
-            print(body)
             if title != '' and body != '':
                 content = Content(url, title, body)
+                content.print()
+
+    def search(self, topic, site):
+        """
+        Searches a given website for a given topic and records all pages found
+        """
+        bs = self.get_page(site.searchUrl + topic)
+        searchResults = bs.select(site.resultListing)
+        for result in searchResults:
+            url = result.select(site.resultUrl)[0].attrs['href']
+            # Check to see whether it's a relative or an absolute URL
+            if (site.absoluteUrl):
+                bs = self.get_page(url)
+            else:
+                bs = self.get_page(site.url + url)
+            if bs is None:
+                print('Something was wrong with that page or URL. Skipping!')
+                return
+            title = self.safe_get(bs, site.titleTag)
+            body = self.safe_get(bs, site.bodyTag)
+            if title != '' and body != '':
+                content = Content(topic, url, title, body)
                 content.print()
 
 
 crawler = Crawler()
 
 siteData = [
-    ['O\'Reilly Media', 'http://oreilly.com', 'h1', 'div.content span div'],
-    ['Reuters', 'http://reuters.com', 'h1', 'div.ArticleBodyWrapper p.Paragraph-paragraph-2Bgue']
+    ['allitebooks', 'http://www.allitebooks.org/', 'http://www.allitebooks.org/?s=', 'article.post', 'article.post a', True, 'h1', 'div.entry-content']
 ]
 
-websites = []
+sites = []
 for row in siteData:
-    websites.append(Website(row[0], row[1], row[2], row[3]))
+    sites.append(Website(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]))
 
-# crawler.parse(websites[0], 'https://www.oreilly.com/library/view/learning-python-5th/9781449355722/')
-crawler.parse(websites[1], 'http://www.reuters.com/article/us-usa-epa-pruitt-idUSKBN19W2D0')
-# crawler.parse(websites[2], 'https://www.brookings.edu/blog/techtank/2016/03/01/idea-to-retire-old-methods-of-policy-education/')
-# crawler.parse(websites[3], 'https://www.nytimes.com/2018/01/28/business/energy-environment/oil-boom.html')
+topics = ['docker']
+for topic in topics:
+    print('GETTING INFO ABOUT: ' + topic)
+    for site in sites:
+        crawler.search(topic, site)
