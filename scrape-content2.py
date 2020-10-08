@@ -2,14 +2,14 @@ from urllib.request import urlopen, Request
 from urllib.error import URLError
 from urllib.error import HTTPError
 from bs4 import BeautifulSoup
+import re
 
 
 class Content:
     """
     Common base class for all articles/pages
     """
-    def __init__(self, topic, url, title, body):
-        self.topic = topic
+    def __init__(self, url, title, body):
         self.url = url
         self.title = title
         self.body = body
@@ -18,7 +18,6 @@ class Content:
         """
         Flexible printing function controls output
         """
-        print('New article found for topic: {}'.format(self.topic))
         print("URL: {}".format(self.url))
         print("TITLE: {}".format(self.title))
         print("BODY:\n{}".format(self.body))
@@ -29,18 +28,20 @@ class Website:
     """
     Contains information about website structure
     """
-    def __init__(self, name, url, search_url, result_listing, result_url, absolute_url, title_tag, body_tag):
+    def __init__(self, name, url, target_pattern, absolute_url, title_tag, body_tag):
         self.name = name
         self.url = url
-        self.search_url = search_url
-        self.result_listing = result_listing
-        self.result_url = result_url
+        self.target_pattern = target_pattern
         self.absolute_url = absolute_url
         self.title_tag = title_tag
         self.body_tag = body_tag
 
 
 class Crawler:
+    def __init__(self, site):
+        self.site = site
+        self.visited = []
+    
     def get_page(self, url):
         try:
             req = Request(url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36'})
@@ -58,19 +59,19 @@ class Crawler:
         Beautiful Soup object and a selector. Returns an empty 
         string if no object is found for the given selector
         """
-        children = page_obj.select(selector)
-        if children is not None and len(children) > 0:
-            return children[0].get_text()
+        selected_elems = page_obj.select(selector)
+        if selected_elems is not None and len(selected_elems) > 0:
+            return '\n'.join([elem.get_text() for elem in selected_elems])
         return ''
 
-    def parse(self, site, url):
+    def parse(self, url):
         """
         Extract content from a given page URL
         """
         bs = self.get_page(url)
         if bs is not None:
-            title = self.safe_get(bs, site.titleTag)
-            body = self.safe_get(bs, site.bodyTag)
+            title = self.safe_get(bs, self.site.title_tag)
+            body = self.safe_get(bs, self.site.body_tag)
             if title != '' and body != '':
                 content = Content(url, title, body)
                 content.print()
@@ -97,20 +98,20 @@ class Crawler:
                 content = Content(topic, url, title, body)
                 content.print()
 
+    def crawl(self):
+        """
+        Get pages from website home page
+        """
+        bs = self.get_page(self.site.url)
+        target_pages = bs.find_all('a', rel=re.compile(self.site.target_pattern))
+        for target_page in target_pages:
+            target_page = target_page.attrs['href']
+            if target_page not in self.visited:
+                self.visited.append(target_page)
+                if not self.site.absolute_url:
+                    target_page = '{}{}'.format(self.site.url, target_page)
+                self.parse(target_page)
 
-crawler = Crawler()
-
-siteData = [
-    ['allitebooks', 'http://www.allitebooks.org/', 'http://www.allitebooks.org/?s=', 'article.post', 'article.post a', True, 'h1', 'div.entry-content']
-    #['allitebooks', 'https://www.allitebooks.in/', 'https://www.allitebooks.in/?s=', 'div.td-module-meta-info', 'a', True, 'h1', 'div.entry-content']
-]
-
-sites = []
-for row in siteData:
-    sites.append(Website(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]))
-
-topics = ['docker']
-for topic in topics:
-    print('GETTING INFO ABOUT: ' + topic)
-    for site in sites:
-        crawler.search(topic, site)
+allitebooks = Website('allitebooks', 'http://www.allitebooks.org/', '^(bookmark)', True, 'h1', 'div.entry-content')
+crawler = Crawler(allitebooks)
+crawler.crawl()
