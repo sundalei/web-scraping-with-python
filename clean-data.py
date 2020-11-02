@@ -2,20 +2,21 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import re
 
-def getNgrams(content, n):
-    content = re.sub('\n|[[\d+\]]', ' ', content)
+def cleanInput(content):
+    content = re.sub('\n|[\[\d+\]]', ' ', content)
     content = bytes(content, 'utf-8')
     content = content.decode('ascii', 'ignore')
-    content = content.split(' ')
-    content = [word for word in content if word != '']
-    output = []
-    for i in range(len(content)-n+1):
-        output.append(content[i:i+n])
-    return output
+    return content
 
-html = urlopen('https://en.wikipedia.org/wiki/Python_(programming_language)')
-bs = BeautifulSoup(html, 'html.parser')
-content = bs.find('div', {'id': 'mw-content-text'}).get_text()
+
+def getNgrams(content, n):
+    content = cleanInput(content)
+    print(content)
+
+# html = urlopen('https://en.wikipedia.org/wiki/Python_(programming_language)')
+# bs = BeautifulSoup(html, 'html.parser')
+# content = bs.find('div', {'id': 'mw-content-text'}).get_text()
+content = 'Python features a dynamic type syst[123]em and automatic memory management. It supports multiple programming paradigms...'
 ngrams = getNgrams(content, 2)
-print(ngrams)
-print('2-grams count is: ' + str(len(ngrams)))
+# print(ngrams)
+# print('2-grams count is: ' + str(len(ngrams)))
