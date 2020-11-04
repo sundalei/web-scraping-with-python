@@ -29,7 +29,7 @@ def getNgrams(content, n):
     for sentence in content:
         newNgrams = [' '.join(ngram) for ngram in getNgramsFromSentence(sentence, 2)]
         ngrams.update(newNgrams)
-    return (ngrams)
+    return ngrams
 
 html = urlopen('https://en.wikipedia.org/wiki/Python_(programming_language)')
 bs = BeautifulSoup(html, 'html.parser')
