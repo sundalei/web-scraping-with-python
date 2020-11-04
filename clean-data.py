@@ -1,5 +1,6 @@
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
+from collections import Counter
 import re
 import string
 
@@ -24,10 +25,11 @@ def getNgramsFromSentence(content, n):
 
 def getNgrams(content, n):
     content = cleanInput(content)
-    ngrams = []
+    ngrams = Counter()
     for sentence in content:
-        ngrams.extend(getNgramsFromSentence(sentence, n))
-    return ngrams
+        newNgrams = [' '.join(ngram) for ngram in getNgramsFromSentence(sentence, 2)]
+        ngrams.update(newNgrams)
+    return (ngrams)
 
 html = urlopen('https://en.wikipedia.org/wiki/Python_(programming_language)')
 bs = BeautifulSoup(html, 'html.parser')
