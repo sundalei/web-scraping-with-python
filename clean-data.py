@@ -50,7 +50,7 @@ def getNgrams(content, n):
         newNgrams = [' '.join(ngram) for ngram in getNgramsFromSentence(sentence, 2)]
         ngrams_list.extend(newNgrams)
         ngrams.update(newNgrams)
-    return (ngrams)
+    return ngrams
 
 # html = urlopen('https://en.wikipedia.org/wiki/Python_(programming_language)')
 # bs = BeautifulSoup(html, 'html.parser')
