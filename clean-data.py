@@ -4,6 +4,23 @@ from collections import Counter
 import re
 import string
 
+def isCommon(ngram):
+    commonWords = ['THE', 'BE', 'AND', 'OF', 'A', 'IN', 'TO', 'HAVE', 'IT', 'I',
+        'THAT', 'FOR', 'YOU', 'HE', 'WITH', 'ON', 'DO', 'SAY', 'THIS', 'THEY',
+        'IS', 'AN', 'AT', 'BUT', 'WE', 'HIS', 'FROM', 'THAT', 'NOT', 'BY',
+        'SHE', 'OR', 'AS', 'WHAT', 'GO', 'THEIR', 'CAN', 'WHO', 'GET', 'IF',
+        'WOULD', 'HER', 'ALL', 'MY', 'MAKE', 'ABOUT', 'KNOW', 'WILL', 'AS',
+        'UP', 'ONE', 'TIME', 'HAS', 'BEEN', 'THERE', 'YEAR', 'SO', 'THINK',
+        'WHEN', 'WHICH', 'THEM', 'SOME', 'ME', 'PEOPLE', 'TAKE', 'OUT', 'INTO',
+        'JUST', 'SEE', 'HIM', 'YOUR', 'COME', 'COULD', 'NOW', 'THAN', 'LIKE',
+        'OTHER', 'HOW', 'THEN', 'ITS', 'OUR', 'TWO', 'MORE', 'THESE', 'WANT',
+        'WAY', 'LOOK', 'FIRST', 'ALSO', 'NEW', 'BECAUSE', 'DAY', 'MORE', 'USE',
+        'NO', 'MAN', 'FIND', 'HERE', 'THING', 'GIVE', 'MANY', 'WELL']
+    for word in ngram:
+        if word in commonWords:
+            return True
+    return False
+
 def cleanSentence(sentence):
     sentence = sentence.split(' ')
     sentence = [word.strip(string.punctuation + string.whitespace) for word in sentence]
@@ -11,7 +28,8 @@ def cleanSentence(sentence):
     return sentence
 
 def cleanInput(content):
-    content = re.sub('\n|[\[\d+\]]', ' ', content)
+    content = content.upper()
+    content = re.sub(r'\n', ' ', content)
     content = bytes(content, 'utf-8')
     content = content.decode('ascii', 'ignore')
     sentences = content.split('. ')
@@ -20,21 +38,25 @@ def cleanInput(content):
 def getNgramsFromSentence(content, n):
     output = []
     for i in range(len(content)-n+1):
-        output.append(content[i:i+n])
+        if not isCommon(content[i:i+n]):
+            output.append(content[i:i+n])
     return output
 
 def getNgrams(content, n):
     content = cleanInput(content)
     ngrams = Counter()
+    ngrams_list = []
     for sentence in content:
         newNgrams = [' '.join(ngram) for ngram in getNgramsFromSentence(sentence, 2)]
+        ngrams_list.extend(newNgrams)
         ngrams.update(newNgrams)
     return (ngrams)
 
-html = urlopen('https://en.wikipedia.org/wiki/Python_(programming_language)')
-bs = BeautifulSoup(html, 'html.parser')
-content = bs.find('div', {'id': 'mw-content-text'}).get_text()
+# html = urlopen('https://en.wikipedia.org/wiki/Python_(programming_language)')
+# bs = BeautifulSoup(html, 'html.parser')
+# content = bs.find('div', {'id': 'mw-content-text'}).get_text()
 # content = 'Python features a dynamic type syst[123]em and automatic memory management. It supports multiple programming paradigms...'
+content = str(urlopen('http://pythonscraping.com/files/inaugurationSpeech.txt').read(), 'utf-8')
 ngrams = getNgrams(content, 2)
 print(ngrams)
 print('2-grams count is: ' + str(len(ngrams)))
